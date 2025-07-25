@@ -94,3 +94,37 @@ python manage.py compress --force
 ```
 
 We are passing `--force` argument to test it in local server as by default the Offline compression is disabled.
+
+# Docker Deployment
+
+## Prerequisites
+- Docker and Docker Compose installed on your server
+- PostgreSQL and RabbitMQ services (can be run as containers)
+
+## Environment Variables
+Set the following environment variables (replace values as needed):
+- `sawaliram_secret_key`: Django secret key
+- `sawaliram_debug_value`: True/False
+- `sawaliram_db_password`: PostgreSQL password
+- `GOOGLE_SITE_KEY`: Google Recaptcha site key
+- `GOOGLE_SECRET_KEY`: Google Recaptcha secret key
+- `google_secret_key_file`: Path to Google service account JSON (if used)
+
+## Build and Run
+
+1. Build the Docker image:
+   ```sh
+   docker-compose build
+   ```
+2. Run migrations and collect static files:
+   ```sh
+   docker-compose run web python manage.py migrate
+   docker-compose run web python manage.py collectstatic --noinput
+   ```
+3. Start the app:
+   ```sh
+   docker-compose up
+   ```
+
+## Example Docker Compose
+See `docker-compose.yml` for service definitions.
