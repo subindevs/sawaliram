@@ -9,38 +9,34 @@ services:
     ports:
       - "5432:5432"
     volumes:
-     - db:/var/lib/postgresql/data
-    network_mode: "host"
+      - db:/var/lib/postgresql/data
 
   rabbitmq:
-    image: rabbitmq
+    image: rabbitmq:3-management
     restart: always
     ports:
-      # AMQP protocol port
-      - "5672:5672"
-      # HTTP management UI
-      - "15672:15672"
-    network_mode: "host"
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI
 
   web:
     build: .
     container_name: django-sawaliram-app
     command: python manage.py runserver 0.0.0.0:8000
     ports:
-      - '8000:8000'
+      - "8000:8000"
     volumes:
       - .:/app
     environment:
-      - sawaliram_secret_key=$DJANGO_SECRET_KEY
-      - environment=$DJANGO_ENV
-      - sawaliram_debug_value=$SAWALIRAM_DEBUG_VALUE
+      - sawaliram_secret_key=${DJANGO_SECRET_KEY}
+      - environment=${DJANGO_ENV}
+      - sawaliram_debug_value=${SAWALIRAM_DEBUG_VALUE}
       - sawaliram_db_password=secret
-      - GOOGLE_SECRET_KEY=$GOOGLE_SECRET_KEY
-      - GOOGLE_SITE_KEY=$GOOGLE_SITE_KEY
+      - GOOGLE_SECRET_KEY=${GOOGLE_SECRET_KEY}
+      - GOOGLE_SITE_KEY=${GOOGLE_SITE_KEY}
+    env_file:
+      - .env
     depends_on:
       - postgres
-    network_mode: "host"
 
 volumes:
   db:
-  
