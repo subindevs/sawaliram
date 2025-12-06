@@ -6,33 +6,38 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=secret
       - POSTGRES_DB=sawaliram
+    ports:
+      - "5432:5432"
     volumes:
-     - db:/var/lib/postgresql/data
-    network_mode: "host"
+      - db:/var/lib/postgresql/data
 
   rabbitmq:
     image: rabbitmq:3-management
     restart: always
-    network_mode: "host"
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI
 
   web:
     build: .
     container_name: django-sawaliram-app
     command: sh -c "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile - --log-level info"
+    ports:
+      - "8000:8000"
     volumes:
       - .:/app
     environment:
       - sawaliram_secret_key=${DJANGO_SECRET_KEY:-your-secret-key-here}
       - environment=${DJANGO_ENV:-production}
-      - sawaliram_debug_value=False
+      - sawaliram_debug_value=True
       - sawaliram_db_password=secret
-      - DB_HOST=localhost
       - GOOGLE_SECRET_KEY=${GOOGLE_SECRET_KEY:-}
       - GOOGLE_SITE_KEY=${GOOGLE_SITE_KEY:-}
+    env_file:
+      - .env
     depends_on:
       - postgres
       - rabbitmq
-    network_mode: "host"
 
 volumes:
   db:
