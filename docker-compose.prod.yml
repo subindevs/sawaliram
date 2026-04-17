@@ -20,11 +20,10 @@ services:
   web:
     build: .
     container_name: django-sawaliram-app
-    command: sh -c "python manage.py migrate && python manage.py compress --force && python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile - --log-level info"
-    ports:
-      - "8000:8000"
+    command: sh -c "python manage.py migrate && python manage.py createsubmissionsfolder && python manage.py compress --force && python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile - --log-level info"
     volumes:
-      - .:/app
+      - static:/app/staticfiles
+      - uploads:/app/uploads
     environment:
       - sawaliram_secret_key=${DJANGO_SECRET_KEY}
       - environment=${DJANGO_ENV:-production}
@@ -41,5 +40,34 @@ services:
       - rabbitmq
       - memcached
 
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template
+      - static:/app/staticfiles
+      - uploads:/app/uploads
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - web
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
 volumes:
   db:
+  static:
+  uploads:
+  certbot_conf:
+  certbot_www:
