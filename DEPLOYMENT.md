@@ -156,12 +156,81 @@ All important data is stored in Docker named volumes and survives container rest
 | `sawaliram_static` | Collected static files |
 | `sawaliram_certbot_conf` | SSL certificates |
 
-To back up the database:
+---
+
+## Database Backup and Restore
+
+### Automate daily backups
+
+Add this to your crontab (`crontab -e`) to back up every day at 2am and keep the last 30 days:
+
 ```bash
-docker exec sawaliram-postgres-1 pg_dump -U admin sawaliram > backup.sql
+0 2 * * * cd /path/to/sawaliram && docker exec sawaliram-postgres-1 pg_dump -U admin sawaliram > backups/backup_$(date +\%Y\%m\%d).sql && find backups/ -name "*.sql" -mtime +30 -delete
 ```
 
-To restore:
+Create the backups folder first:
 ```bash
-cat backup.sql | docker exec -i sawaliram-postgres-1 psql -U admin -d sawaliram
+mkdir -p /path/to/sawaliram/backups
+```
+
+### Create a backup (custom format — recommended for large databases)
+
+```bash
+docker exec sawaliram-postgres-1 pg_dump -U admin -Fc sawaliram > backup_$(date +%Y%m%d_%H%M%S).dump
+```
+
+The `-Fc` flag creates a compressed binary format that is smaller and restores faster than plain SQL.
+
+### Restore from a backup
+
+**On the same server:**
+```bash
+docker cp backup_20240417_143000.dump sawaliram-postgres-1:/tmp/backup.dump
+docker exec sawaliram-postgres-1 pg_restore -U admin -d sawaliram -j 4 /tmp/backup.dump
+docker exec sawaliram-postgres-1 rm /tmp/backup.dump
+```
+
+The `-j 4` flag runs 4 parallel restore jobs — increase this number on servers with more CPU cores.
+
+**When migrating to a new server:**
+
+1. Copy the backup file to the new server:
+```bash
+scp backup_20240417_143000.dump user@new-server:/path/to/sawaliram/
+```
+
+2. On the new server, start only the database first:
+```bash
+docker compose -f docker-compose.prod.yml up -d postgres
+```
+
+3. Wait a few seconds for Postgres to initialise, then restore:
+```bash
+docker cp backup_20240417_143000.dump sawaliram-postgres-1:/tmp/backup.dump
+docker exec sawaliram-postgres-1 pg_restore -U admin -d sawaliram -j 4 /tmp/backup.dump
+docker exec sawaliram-postgres-1 rm /tmp/backup.dump
+```
+
+4. Start the rest of the stack:
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Back up uploaded files
+
+The submitted Excel files in the `uploads/` volume should also be backed up:
+
+```bash
+docker run --rm \
+  -v sawaliram_uploads:/data \
+  -v $(pwd)/backups:/backup \
+  alpine tar czf /backup/uploads_$(date +%Y%m%d).tar.gz -C /data .
+```
+
+To restore uploads on a new server:
+```bash
+docker run --rm \
+  -v sawaliram_uploads:/data \
+  -v $(pwd)/backups:/backup \
+  alpine tar xzf /backup/uploads_20240417.tar.gz -C /data
 ```
