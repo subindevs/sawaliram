@@ -54,7 +54,7 @@ python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 docker compose -f docker-compose.prod.yml up -d postgres rabbitmq memcached web
 ```
 
-Wait for the web container to finish running migrations and collecting static files:
+Wait for the web container to finish running migrations, creating user groups, and collecting static files:
 ```bash
 docker logs -f django-sawaliram-app
 ```
