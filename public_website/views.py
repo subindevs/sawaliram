@@ -1084,20 +1084,26 @@ class AnalyticsPage(View):
     def getQuestionFormatStats(self):
         distinct = Question.objects.values('question_format').annotate(count=Count('question_format'))
         format_tuples = sorted([(tple['question_format'] if tple['question_format'] else "Other", tple['count']) for tple in distinct], key = lambda item : item[0])
+        if not format_tuples:
+            return [], []
         return map(list, zip(*format_tuples))
 
     def getCurriculumStats(self):
         distinct = Question.objects.values('curriculum_followed').annotate(count=Count('curriculum_followed'))
         curriculum_tuples = sorted([(tple['curriculum_followed'] if tple['curriculum_followed'] else "Other", tple['count']) for tple in distinct], key = lambda item : item[0])
+        if not curriculum_tuples:
+            return [], []
         return map(list, zip(*curriculum_tuples))
 
     def getContextStats(self):
         distinct = Question.objects.values('context').annotate(count=Count('context'))
         context_tuples = sorted([
-                (tple['context'] 
-                if (tple['context'] and tple['context'] != "Other (elaborate in the Notes column)") 
+                (tple['context']
+                if (tple['context'] and tple['context'] != "Other (elaborate in the Notes column)")
                 else "Other", tple['count']) for tple in distinct],
             key = lambda item : item[0])
+        if not context_tuples:
+            return [], []
         return map(list, zip(*context_tuples))
 
     def getMapStats(self):
