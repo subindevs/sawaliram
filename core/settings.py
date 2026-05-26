@@ -26,6 +26,10 @@ ALLOWED_HOSTS = [
     'localhost',
 ]
 
+_domain = os.environ.get('DOMAIN')
+if _domain:
+    ALLOWED_HOSTS += [_domain, f'www.{_domain}']
+
 # SSL/HTTPS Configuration
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
