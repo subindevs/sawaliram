@@ -1,3 +1,12 @@
+x-django-env: &django-env
+  sawaliram_secret_key: ${DJANGO_SECRET_KEY}
+  environment: ${DJANGO_ENV:-production}
+  sawaliram_debug_value: "False"
+  sawaliram_db_password: ${DB_PASSWORD}
+  DB_HOST: postgres
+  CELERY_BROKER_URL: amqp://rabbitmq
+  MEMCACHED_LOCATION: memcached:11211
+
 services:
   postgres:
     image: postgres:14-alpine
@@ -25,21 +34,39 @@ services:
       - static:/app/staticfiles
       - uploads:/app/uploads
     environment:
-      - sawaliram_secret_key=${DJANGO_SECRET_KEY}
-      - environment=${DJANGO_ENV:-production}
-      - sawaliram_debug_value=False
-      - sawaliram_db_password=${DB_PASSWORD}
-      - DB_HOST=postgres
-      - CELERY_BROKER_URL=amqp://rabbitmq
-      - MEMCACHED_LOCATION=memcached:11211
-      - GOOGLE_SECRET_KEY=${GOOGLE_SECRET_KEY:-}
-      - GOOGLE_SITE_KEY=${GOOGLE_SITE_KEY:-}
-      - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-True}
-      - DOMAIN=${DOMAIN}
+      <<: *django-env
+      GOOGLE_SECRET_KEY: ${GOOGLE_SECRET_KEY:-}
+      GOOGLE_SITE_KEY: ${GOOGLE_SITE_KEY:-}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-True}
+      DOMAIN: ${DOMAIN}
     depends_on:
       - postgres
       - rabbitmq
       - memcached
+
+  celery-worker:
+    build: .
+    command: celery -A core worker -l info
+    volumes:
+      - uploads:/app/uploads
+    environment:
+      <<: *django-env
+    depends_on:
+      - postgres
+      - rabbitmq
+      - memcached
+    restart: always
+
+  celery-beat:
+    build: .
+    command: celery -A core beat -l info
+    environment:
+      <<: *django-env
+    depends_on:
+      - postgres
+      - rabbitmq
+      - memcached
+    restart: always
 
   nginx:
     image: nginx:alpine
