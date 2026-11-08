@@ -821,7 +821,7 @@ class ContactPage(FormView):
                     subject='[Contact] ' + form.cleaned_data.get('subject'),
                     message='',
                     html_message=form.cleaned_data.get('message') + '<br><br> Senders email: ' + form.cleaned_data.get('emailid'),
-                    from_email='"Sawaliram" <mail@sawaliram.org>',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=['mail.sawaliram@gmail.com'],
                     fail_silently=False,
                 )

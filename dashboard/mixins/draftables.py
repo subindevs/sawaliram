@@ -37,7 +37,7 @@ class DraftMixin:
         except Exception as e:
             print('Error submitting: {}'.format(e))
             raise e
-        return type(self).objects.get(id=self.id)
+        return self
 
 
 class SubmittedMixin:

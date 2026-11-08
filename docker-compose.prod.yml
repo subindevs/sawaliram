@@ -6,6 +6,13 @@ x-django-env: &django-env
   DB_HOST: postgres
   CELERY_BROKER_URL: amqp://rabbitmq
   MEMCACHED_LOCATION: memcached:11211
+  DOMAIN: ${DOMAIN}
+  EMAIL_HOST: ${EMAIL_HOST:-mail.tifrh.res.in}
+  EMAIL_HOST_USER: ${EMAIL_HOST_USER:-nitinpaul@tifrh.res.in}
+  EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+  EMAIL_PORT: ${EMAIL_PORT:-25}
+  EMAIL_USE_TLS: ${EMAIL_USE_TLS:-False}
+  DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-"Sawaliram" <mail@sawaliram.org>}
 
 services:
   postgres:
@@ -38,11 +45,11 @@ services:
       GOOGLE_SECRET_KEY: ${GOOGLE_SECRET_KEY:-}
       GOOGLE_SITE_KEY: ${GOOGLE_SITE_KEY:-}
       SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-True}
-      DOMAIN: ${DOMAIN}
     depends_on:
       - postgres
       - rabbitmq
       - memcached
+    restart: always
 
   celery-worker:
     build: .

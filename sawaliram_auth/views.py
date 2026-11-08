@@ -47,7 +47,7 @@ def send_verification_email(user):
     profile.save()
 
     message = 'Hello ' + user.first_name + ',<br>'
-    message += 'Thank you for signing up with Sawaliram! Please click on this link: https://sawaliram.org/users/verify/' + verification_code + ' to verify your email. <br><br>Yours truly,<br>Sawaliram'
+    message += f'Thank you for signing up with Sawaliram! Please click on this link: https://{settings.DOMAIN}/users/verify/{verification_code} to verify your email. <br><br>Yours truly,<br>Sawaliram'
 
     if not settings.DEBUG:
 
@@ -55,7 +55,7 @@ def send_verification_email(user):
             subject='Sawaliram - verify your email',
             message='',
             html_message=message,
-            from_email='"Sawaliram" <mail@sawaliram.org>',
+            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             fail_silently=False,
         )
@@ -312,13 +312,13 @@ class ResetPasswordView(View):
             profile.save()
 
             message = 'Hello ' + user.first_name + ',<br>'
-            message += 'Please click on this link: https://sawaliram.org/users/change-password-form/' + password_reset_code + ' to reset your password. <br><br>Yours truly,<br>Sawaliram'
+            message += f'Please click on this link: https://{settings.DOMAIN}/users/change-password-form/{password_reset_code} to reset your password. <br><br>Yours truly,<br>Sawaliram'
 
             send_mail(
                 subject='Sawaliram - reset your password',
                 message='',
                 html_message=message,
-                from_email='"Sawaliram" <mail@sawaliram.org>',
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
                 fail_silently=False,
             )

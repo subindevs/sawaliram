@@ -26,9 +26,9 @@ ALLOWED_HOSTS = [
     'localhost',
 ]
 
-_domain = os.environ.get('DOMAIN')
-if _domain:
-    ALLOWED_HOSTS += [_domain, f'www.{_domain}']
+DOMAIN = os.environ.get('DOMAIN')
+if DOMAIN:
+    ALLOWED_HOSTS += [DOMAIN, f'www.{DOMAIN}']
 
 # SSL/HTTPS Configuration
 if not DEBUG:
@@ -133,6 +133,23 @@ CELERY_BEAT_SCHEDULE = {
 AUTH_USER_MODEL = 'sawaliram_auth.User'
 LOGIN_URL = '/users/signin'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+}
+
 # Sentry settings
 sentry_sdk.init(
     dsn="https://1a42cb652cad417694d12c50b855d456@o1007142.ingest.sentry.io/5969821",
@@ -141,9 +158,12 @@ sentry_sdk.init(
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'mail.tifrh.res.in'
-EMAIL_HOST_USER = 'nitinpaul@tifrh.res.in'
-EMAIL_PORT = 25
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mail.tifrh.res.in')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'nitinpaul@tifrh.res.in')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 25))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '"Sawaliram" <mail@sawaliram.org>')
 
 
 #CAPTCHA
